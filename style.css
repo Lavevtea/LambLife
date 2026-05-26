@@ -39,7 +39,7 @@
 
 html, body {
   width: 100%;
-  height: 100%;
+  height: 100dvh;
   overflow: hidden;
   background: #82A884;
   display: flex;
@@ -64,7 +64,7 @@ html, body {
   padding: 18px 16px 24px;
 
   width: min(900px, 98vw);
-  height: min(420px, 96vh);
+  height: min(420px, 96dvh);
   min-width: 580px;
 }
 
@@ -889,4 +889,10 @@ button:disabled {
 .img-btn:active {
   transform: translateY(4px) scale(0.96);
   filter: brightness(0.8);
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }

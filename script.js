@@ -1,3 +1,13 @@
+async function enterFullscreen() {
+
+  const elem = document.documentElement;
+
+  if (elem.requestFullscreen) {
+    await elem.requestFullscreen();
+  }
+
+}
+
 const lamb        = document.getElementById("lamb");
 const startBtn    = document.getElementById("startBtn");
 
@@ -11,7 +21,8 @@ const gameButtons = [
   document.getElementById("petMini"),
 ];
 
-startBtn.addEventListener("click", () => {
+startBtn.addEventListener("click", async () => {
+  await enterFullscreen();
   document.getElementById("startScreen").style.display = "none";
   document.getElementById("hud").style.display         = "flex";
   document.getElementById("world").style.display       = "block";
