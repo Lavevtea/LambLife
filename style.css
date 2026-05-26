@@ -712,7 +712,7 @@ html, body {
   #console {
     transform: scale(0.55);
     transform-origin: center center;
-    width: 900px;        /* biarkan lebar asli */
+    width: 768px;        /* biarkan lebar asli */
     height: 420px;
     min-width: unset;
   }
