@@ -708,13 +708,12 @@ html, body {
 /* ============================================
    RESPONSIVE SCALING
    ============================================ */
-@media (max-width: 700px) and (orientation: landscape) {
+@media (max-width: 768px) and (orientation: landscape) {
   #console {
-    padding: 10px 8px 14px;
-    gap: 0;
-    border-radius: 14px 14px 28px 28px;
-    width: 100vw;
-    height: 100vh;
+    transform: scale(0.55);
+    transform-origin: center center;
+    width: 900px;        /* biarkan lebar asli */
+    height: 420px;
     min-width: unset;
   }
 
@@ -727,7 +726,7 @@ html, body {
   .action-mini { font-size: 5px; padding: 5px 2px; }
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 768px) {
   #console { width: 1000px; height: 460px; }
   #screen { height: 350px; max-height: 350px; }
   #lambSprite { font-size: 34px; }
