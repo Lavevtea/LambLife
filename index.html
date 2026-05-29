@@ -53,30 +53,24 @@
             <img src="assets/start_btn.png" alt="Start">
           </button>
         </div>
-
-        <!-- HUD -->
-        <div id="hud" style="display:none">
-          <div class="hud-row1">
-            <div id="timerDisplay">10:00</div>
-            <div id="bondMeter">
-              <span>Bond</span>
-              <div class="meter-bar"><div id="bondFill"></div></div>
-            </div>
-            <button id="langToggle">EN</button>
+        
+        <div id="nameOverlay" style="display:none">
+          <div class="name-box">
+            <div class="name-title"></div>
+            <input id="nameInput" type="text" maxlength="7" placeholder="ex.Billy" autocomplete="off" spellcheck="false">
+            <button id="nameOkBtn" class="ok-btn"></button>
           </div>
-          <div class="hud-row2">
-            <div class="stat-bar-wrap">
-              <span class="stat-label">🌿</span>
-              <div class="meter-bar"><div id="foodFill"  class="stat-fill food-fill"></div></div>
-            </div>
-            <div class="stat-bar-wrap">
-              <span class="stat-label">❤️</span>
-              <div class="meter-bar"><div id="happyFill" class="stat-fill happy-fill"></div></div>
-            </div>
-            <div class="stat-bar-wrap">
-              <span class="stat-label">💤</span>
-              <div class="meter-bar"><div id="sleepFill" class="stat-fill sleep-fill"></div></div>
-            </div>
+        </div>
+
+        <div id="gameOverlay" style="display:none">
+          <div id="overlayTop">
+            <div id="lambNameDisplay">Domba</div>
+            <div id="timerDisplay">3:00</div>
+          </div>
+          <div id="overlayStats">
+            <div class="stat-bar-wrap"><div class="meter-bar"><div id="foodFill"  class="stat-fill food-fill"  style="width:80%"></div></div></div>
+            <div class="stat-bar-wrap"><div class="meter-bar"><div id="happyFill" class="stat-fill happy-fill" style="width:80%"></div></div></div>
+            <div class="stat-bar-wrap"><div class="meter-bar"><div id="sleepFill" class="stat-fill sleep-fill" style="width:80%"></div></div></div>
           </div>
         </div>
 
@@ -85,11 +79,10 @@
           <div id="tileLayer"></div>
           <div id="foodItem" style="display:none">🌿</div>
           <div id="dialogue"></div>
-          <div id="lamb">
-            <img id="lambSprite" src="assets/lamb.png" alt="lamb">
-            <div id="lambState"></div>
-          </div>
-          <div id="particles"></div>
+        </div>
+        <div id="lamb">
+          <img id="lambSprite" src="assets/lamb.png" alt="lamb">
+          <div id="lambState"></div>
         </div>
 
         <!-- CUTSCENE -->
@@ -118,7 +111,7 @@
 
   </div><!-- /console -->
 
-  <script src="lang.js"></script>
+
   <script src="script.js"></script>
 </body>
 </html>

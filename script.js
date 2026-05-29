@@ -17,52 +17,84 @@ const gameButtons = [
   document.getElementById("petBtn"),
   document.getElementById("playBtn"),
   document.getElementById("sleepBtn"),
-  document.getElementById("feedMini"),
-  document.getElementById("petMini"),
-];
+].filter(Boolean);
+
+let lambName = "Domba";
 
 startBtn.addEventListener("click", async () => {
   await enterFullscreen();
   document.getElementById("startScreen").style.display = "none";
-  document.getElementById("hud").style.display         = "flex";
+  // tampilkan name overlay dulu
+  document.getElementById("nameOverlay").style.display = "flex";
+  document.getElementById("nameInput").focus();
+});
+
+document.getElementById("nameOkBtn").addEventListener("click", () => {
+  const val = document.getElementById("nameInput").value.trim();
+  if (val.length === 0) {
+  document.getElementById("nameInput").classList.add("name-error");
+  document.getElementById("nameInput").style.borderColor = "#d65f5f";
+  document.getElementById("nameInput").placeholder = "min 1 char!";
+  return;
+    return;
+  }
+  lambName = val.slice(0, 7);
+  document.getElementById("nameOverlay").style.display = "none";
+  document.getElementById("gameOverlay").style.display = "block";
   document.getElementById("world").style.display       = "block";
-  gameButtons.forEach(btn => btn.disabled = false);
+  document.getElementById("lambNameDisplay").textContent = lambName;
+  gameButtons.forEach(btn => btn && (btn.disabled = false));
+  document.querySelectorAll(".dpad-btn[data-dir]")
+  .forEach(btn => btn.removeAttribute("disabled"));
   startGame();
 });
 
-const STEP = 16;
-const TICK = 150;
+document.getElementById("nameInput").addEventListener("input", () => {
+  document.getElementById("nameInput").classList.remove("name-error");
+  document.getElementById("nameInput").style.borderColor = "#C0D470";
+  document.getElementById("nameInput").placeholder = "e.g. Fluffy";
+});
 
+// document.getElementById("nameInput").addEventListener("keydown", e => {
+//   if (e.key === "Enter") document.getElementById("nameOkBtn").click();
+// });
+
+
+const SPEED = 2;
+
+let animFrame = null; 
 let lambX = 80;
 let lambY = 60;
-let keysHeld = new Set();
-let moveLoop = null;
+let keysHeld = new Set(); 
+
 
 function moveLamb() {
-  const world = document.getElementById("world");
-  const maxX = world.offsetWidth - 40;
-  const maxY = world.offsetHeight - 40;
+  const screen = document.getElementById("screen");
+  const maxX = screen.offsetWidth - 64;   // 64 = lebar sprite
+  const maxY = screen.offsetHeight - 64;  // 64 = tinggi sprite
 
-  if (keysHeld.has("left"))  lambX = Math.max(0, lambX - STEP);
-  if (keysHeld.has("right")) lambX = Math.min(maxX, lambX + STEP);
-  if (keysHeld.has("up"))    lambY = Math.max(0, lambY - STEP);
-  if (keysHeld.has("down"))  lambY = Math.min(maxY, lambY + STEP);
+  if (keysHeld.has("left"))  lambX = Math.max(0, lambX - SPEED); 
+  if (keysHeld.has("right")) lambX = Math.min(maxX, lambX + SPEED);
+  if (keysHeld.has("up"))    lambY = Math.max(0, lambY - SPEED);
+  if (keysHeld.has("down"))  lambY = Math.min(maxY, lambY + SPEED);
 
   lamb.style.left = lambX + "px";
   lamb.style.top  = lambY + "px";
 }
 
+function gameLoop() {
+  if (keysHeld.size > 0) moveLamb();
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+
 function startLoop() {
-  if (moveLoop) return;
-  moveLamb(); // instant first step
-  moveLoop = setInterval(moveLamb, TICK);
+  if (animFrame) return;
+  animFrame = requestAnimationFrame(gameLoop);
 }
 
 function stopLoop() {
-  if (keysHeld.size === 0) {
-    clearInterval(moveLoop);
-    moveLoop = null;
-  }
+
 }
 
 const keyMap = {
