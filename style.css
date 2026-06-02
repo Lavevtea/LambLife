@@ -877,10 +877,10 @@ html, body {
 /* World lebih bawah karena HUD 2 baris */
 #world { top: 48px !important; }
 
-/* Lamb PNG */
+/* 1,25x dr 64px */
 #lambSprite { 
-  width: 96px;
-  height: 96px;
+  width: 80px;
+  height: 80px;
   image-rendering: pixelated;
   display: block;
 }
