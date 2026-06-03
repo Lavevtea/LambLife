@@ -14,7 +14,7 @@ const startBtn    = document.getElementById("startBtn");
 const gameButtons = [
   ...document.querySelectorAll(".dpad-btn[data-dir]"),
   document.getElementById("feedBtn"),
-  document.getElementById("petBtn"),
+  document.getElementById("loveBtn"),
   document.getElementById("playBtn"),
   document.getElementById("sleepBtn"),
 ].filter(Boolean);
@@ -24,7 +24,6 @@ let lambName = "Domba";
 startBtn.addEventListener("click", async () => {
   await enterFullscreen();
   document.getElementById("startScreen").style.display = "none";
-  // tampilkan name overlay dulu
   document.getElementById("nameOverlay").style.display = "flex";
   document.getElementById("nameInput").focus();
 });
@@ -36,7 +35,6 @@ document.getElementById("nameOkBtn").addEventListener("click", () => {
   document.getElementById("nameInput").style.borderColor = "#d65f5f";
   document.getElementById("nameInput").placeholder = "min 1 char!";
   return;
-    return;
   }
   lambName = val.slice(0, 7);
   document.getElementById("nameOverlay").style.display = "none";
@@ -60,12 +58,37 @@ document.getElementById("nameInput").addEventListener("input", () => {
 // });
 
 
-const SPEED = 2;
+const SPEED = 0.75;
 
 let animFrame = null; 
 let lambX = 80;
 let lambY = 60;
 let keysHeld = new Set(); 
+
+const moveFrames = [
+  'assets/lamb_animation/move/move1.png',
+  'assets/lamb_animation/move/move2.png',
+  'assets/lamb_animation/move/move3.png',
+  'assets/lamb_animation/move/move4.png'
+];
+let moveFrame = 0;
+let moveInterval = null;
+
+function startMoveAnim() {
+  if (moveInterval) return;
+  moveInterval = setInterval(() => {
+    moveFrame = (moveFrame + 1) % moveFrames.length;
+    document.getElementById('lambSprite').src = moveFrames[moveFrame];
+  }, 100);
+}
+
+function stopMoveAnim() {
+  clearInterval(moveInterval);
+  moveInterval = null;
+  moveFrame = 0;
+}
+
+
 
 const idleFrames = [
   'assets/lamb_animation/idle/idle1.png',
@@ -116,11 +139,22 @@ function stopSleepAnim() {
 
 let isBusy = false;
 
-function setBusy(duration, animStart, animStop) {
+
+const stats = { food: 0, happy: 0, sleep: 0, love: 0 };
+
+function addStat(key) {
+  stats[key] = Math.min(100, stats[key] + 33.33);
+  const map = { food: 'foodFill', happy: 'happyFill', sleep: 'sleepFill', love: 'loveFill' };
+  document.getElementById(map[key]).style.width = stats[key] + '%';
+}
+
+
+function setBusy(duration, animStart, animStop, statKey) {
   if (isBusy) return;
   isBusy = true;
 
   stopIdleAnim();
+  stopMoveAnim();
   keysHeld.clear();
   animStart();
 
@@ -130,6 +164,7 @@ function setBusy(duration, animStart, animStop) {
 
   setTimeout(() => {
     animStop();
+    if (statKey) addStat(statKey); 
     isBusy = false;
     gameButtons.forEach(btn => btn && (btn.disabled = false));
     document.querySelectorAll(".dpad-btn[data-dir]")
@@ -139,24 +174,100 @@ function setBusy(duration, animStart, animStop) {
 }
 
 document.getElementById("sleepBtn").addEventListener("click", () => {
-  setBusy(5000, startSleepAnim, stopSleepAnim);
+  setBusy(5000, startSleepAnim, stopSleepAnim, "sleep");
+  
+});
+
+document.getElementById("feedBtn").addEventListener("click", () => {
+  setBusy(3300, playFeedAnim, stopFeedAnim, "food");
+});
+
+document.getElementById("loveBtn").addEventListener("click", () => {
+  setBusy(5000, playLoveAnim, stopLoveAnim, "love");
 });
 
 
 
+const feedFrames = [
+  'assets/lamb_animation/feed/feed1.png',
+  'assets/lamb_animation/feed/feed2.png',
+  'assets/lamb_animation/feed/feed3.png',
+  'assets/lamb_animation/feed/feed4.png',
+  'assets/lamb_animation/feed/feed5.png',
+  'assets/lamb_animation/feed/feed6.png',
+  'assets/lamb_animation/feed/feed7.png'
+];
+
+let feedInterval = null;
+
+function playFeedAnim() {
+  let frame = 0;
+  const sprite = document.getElementById('lambSprite');
+  sprite.src = feedFrames[0];
+  
+  feedInterval = setInterval(() => {
+    frame++;
+    if (frame >= feedFrames.length) {
+      clearInterval(feedInterval);
+      feedInterval = null;
+      return;
+    }
+    sprite.src = feedFrames[frame];
+  }, 500);
+}
+
+function stopFeedAnim() {
+  if (feedInterval) {
+    clearInterval(feedInterval);
+    feedInterval = null;
+  }
+}
 
 
+let loveInterval = null;
+
+const loveFrames = [
+  'assets/lamb_animation/love/love1.png',
+  'assets/lamb_animation/love/love2.png',
+  'assets/lamb_animation/love/love3.png',
+]
+
+function playLoveAnim() {
+  let frame = 0;
+  const sprite = document.getElementById('lambSprite');
+  sprite.src = loveFrames[0];
+
+  loveInterval = setInterval(() => {
+    frame = frame === 0 ? 1 : 0;
+    sprite.src = loveFrames[frame];
+  }, 500);
+}
+function stopLoveAnim() {
+  if (loveInterval) {
+    clearInterval(loveInterval);
+    loveInterval = null;
+  }
+  document.getElementById('lambSprite').src = idleFrames[0];
+}
+
+let facingRight = false;
+
+function updateFacing() {
+  const sprite = document.getElementById('lambSprite');
+  sprite.style.transform = facingRight ? 'scaleX(-1)' : 'scaleX(1)';
+}
 
 function moveLamb() {
   const screen = document.getElementById("screen");
-  const maxX = screen.offsetWidth - 64;   
-  const maxY = screen.offsetHeight - 64; 
+  const maxX = screen.offsetWidth - 67;   
+  const maxY = screen.offsetHeight - 77; 
 
-  if (keysHeld.has("left"))  lambX = Math.max(0, lambX - SPEED); 
-  if (keysHeld.has("right")) lambX = Math.min(maxX, lambX + SPEED);
+  if (keysHeld.has("left"))  {lambX = Math.max(0, lambX - SPEED);facingRight = false;}
+  if (keysHeld.has("right")) {lambX = Math.min(maxX, lambX + SPEED);facingRight = true;}
   if (keysHeld.has("up"))    lambY = Math.max(0, lambY - SPEED);
   if (keysHeld.has("down"))  lambY = Math.min(maxY, lambY + SPEED);
 
+  updateFacing();
   lamb.style.left = lambX + "px";
   lamb.style.top  = lambY + "px";
 }
@@ -173,7 +284,10 @@ function startLoop() {
 }
 
 function stopLoop() {
-
+  if (animFrame) {
+    cancelAnimationFrame(animFrame);
+    animFrame = null;
+  }
 }
 
 const keyMap = {
@@ -191,11 +305,22 @@ document.addEventListener("keydown", e => {
     return;
   }
 
+   if (e.key === "l" || e.key === "L") {
+    document.getElementById("feedBtn").click();
+    return;
+   }
+
+  if (e.key === "i" || e.key === "I") {
+    document.getElementById("loveBtn").click();
+    return;
+   }
+
   const dir = keyMap[e.key];
   if (!dir) return;
   e.preventDefault();
   keysHeld.add(dir);
   stopIdleAnim();
+  startMoveAnim();
   startLoop();
 });
 
@@ -204,8 +329,7 @@ document.addEventListener("keyup", e => {
   const dir = keyMap[e.key];
   if (!dir) return;
   keysHeld.delete(dir);
-  if (keysHeld.size === 0 && !isBusy) startIdleAnim();
-  stopLoop();
+  if (keysHeld.size === 0 && !isBusy) {stopMoveAnim(); startIdleAnim();}
 });
 
 // D-pad buttons (still single direction, touch doesn't do diagonal)
@@ -213,13 +337,13 @@ function startMove(dir) {
   if (isBusy) return;
   keysHeld.add(dir);
   stopIdleAnim();
+  startMoveAnim();
   startLoop();
 }
 
 function stopMove(dir) {
   keysHeld.delete(dir);
-  if (keysHeld.size === 0) startIdleAnim();
-  stopLoop();
+  if (keysHeld.size === 0) {stopMoveAnim(); startIdleAnim();}
 }
 
 
@@ -256,6 +380,7 @@ function onTimerEnd() {
 }
 
 function startGame() {
+  document.body.focus();
   startLoop();
   startIdleAnim();
   startCountdown();
