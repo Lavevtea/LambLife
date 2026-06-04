@@ -58,7 +58,7 @@ document.getElementById("nameInput").addEventListener("input", () => {
 // });
 
 
-const SPEED = 0.75;
+const SPEED = 150;
 
 let animFrame = null; 
 let lambX = 80;
@@ -257,23 +257,29 @@ function updateFacing() {
   sprite.style.transform = facingRight ? 'scaleX(-1)' : 'scaleX(1)';
 }
 
-function moveLamb() {
+function moveLamb(deltaTime) {
   const screen = document.getElementById("screen");
   const maxX = screen.offsetWidth - 67;   
   const maxY = screen.offsetHeight - 77; 
 
-  if (keysHeld.has("left"))  {lambX = Math.max(0, lambX - SPEED);facingRight = false;}
-  if (keysHeld.has("right")) {lambX = Math.min(maxX, lambX + SPEED);facingRight = true;}
-  if (keysHeld.has("up"))    lambY = Math.max(0, lambY - SPEED);
-  if (keysHeld.has("down"))  lambY = Math.min(maxY, lambY + SPEED);
+  if (keysHeld.has("left"))  {lambX = Math.max(0, lambX - SPEED*deltaTime);facingRight = false;}
+  if (keysHeld.has("right")) {lambX = Math.min(maxX, lambX + SPEED*deltaTime);facingRight = true;}
+  if (keysHeld.has("up"))    lambY = Math.max(0, lambY - SPEED*deltaTime);
+  if (keysHeld.has("down"))  lambY = Math.min(maxY, lambY + SPEED*deltaTime);
 
   updateFacing();
   lamb.style.left = lambX + "px";
   lamb.style.top  = lambY + "px";
 }
 
-function gameLoop() {
-  if (keysHeld.size > 0) moveLamb();
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+  if (lastTime === 0) lastTime = timestamp;
+  const deltaTime = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  if (keysHeld.size > 0) moveLamb(deltaTime);
   animFrame = requestAnimationFrame(gameLoop);
 }
 
@@ -332,7 +338,6 @@ document.addEventListener("keyup", e => {
   if (keysHeld.size === 0 && !isBusy) {stopMoveAnim(); startIdleAnim();}
 });
 
-// D-pad buttons (still single direction, touch doesn't do diagonal)
 function startMove(dir) {
   if (isBusy) return;
   keysHeld.add(dir);
