@@ -65,7 +65,7 @@
         <div id="gameOverlay" style="display:none">
           <div id="overlayTop">
             <div id="lambNameDisplay">Domba</div>
-            <div id="timerDisplay">3:00</div>
+            <!-- <div id="timerDisplay">3:00</div> -->
           </div>
         <div id="overlayStats">
           <div class="stat-bar-wrap">
@@ -103,7 +103,21 @@
         <div id="cutscene" style="display:none">
           <div id="cutsceneContent"></div>
         </div>
-
+        
+        <div id="puzzleOverlay">
+          <button id="puzzleExitBtn"></button>
+          <div id="puzzleModeCol">
+            <button class="mode-sel-btn" data-mode="easy"></button>
+            <button class="mode-sel-btn" data-mode="medium"></button>
+            <button class="mode-sel-btn" data-mode="hard"></button>
+          </div>
+          <div id="puzzleGridWrap">
+            <div id="puzzleGrid"></div>
+          </div>
+          <div id="puzzleLambCol">
+            <img id="puzzleLambSprite" src="assets/lamb_animation/idle/idle1.png">
+          </div>
+        </div>
       </div><!-- /screen -->
     </div><!-- /screen-bezel -->
 

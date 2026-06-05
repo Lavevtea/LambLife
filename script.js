@@ -58,7 +58,7 @@ document.getElementById("nameInput").addEventListener("input", () => {
 // });
 
 
-const SPEED = 150;
+const SPEED = 100;
 
 let animFrame = null; 
 let lambX = 80;
@@ -143,7 +143,7 @@ let isBusy = false;
 const stats = { food: 0, happy: 0, sleep: 0, love: 0 };
 
 function addStat(key) {
-  stats[key] = Math.min(100, stats[key] + 33.33);
+  stats[key] = Math.min(100, stats[key] + 25);
   const map = { food: 'foodFill', happy: 'happyFill', sleep: 'sleepFill', love: 'loveFill' };
   document.getElementById(map[key]).style.width = stats[key] + '%';
 }
@@ -303,6 +303,12 @@ const keyMap = {
 };
 
 document.addEventListener("keydown", e => {
+  if (puzzleOpen) {
+    if (e.key === 'J' || e.key === 'j') {
+      closePuzzle(false);
+    }
+    return;
+  }
   if (isBusy) return;
   if (document.activeElement.tagName === "INPUT") return;
 
@@ -318,6 +324,11 @@ document.addEventListener("keydown", e => {
 
   if (e.key === "i" || e.key === "I") {
     document.getElementById("loveBtn").click();
+    return;
+   }
+
+  if (e.key === "j" || e.key === "J") {
+    document.getElementById("playBtn").click();
     return;
    }
 
@@ -339,6 +350,7 @@ document.addEventListener("keyup", e => {
 });
 
 function startMove(dir) {
+  if (puzzleOpen) return;
   if (isBusy) return;
   keysHeld.add(dir);
   stopIdleAnim();
@@ -388,11 +400,224 @@ function startGame() {
   document.body.focus();
   startLoop();
   startIdleAnim();
-  startCountdown();
+  // startCountdown();
 }
 
 document.querySelectorAll(".dpad-btn[data-dir]").forEach(btn => {
   btn.addEventListener("pointerdown", () => startMove(btn.dataset.dir));
   btn.addEventListener("pointerup",   () => stopMove(btn.dataset.dir));
   btn.addEventListener("pointerleave",() => stopMove(btn.dataset.dir));
+});
+
+
+
+
+// ============================================================
+// SLIDING PUZZLE MINIGAME
+// ============================================================
+
+const PUZZLE_IMG = 'assets/puzzle_img.png';
+let puzzleOpen   = false;
+let puzzleTiles  = [];
+let puzzleCursor = { row: 0, col: 0 };
+let puzzleGrid   = 3;
+let puzzleReward = 50;
+let currentMode  = 'medium';
+
+const MODES = {
+  easy:   { grid: 2, reward: 25, tileSize: 110 },
+  medium: { grid: 3, reward: 50,    tileSize: 80  },
+  hard:   { grid: 4, reward: 100,   tileSize: 62  },
+};
+
+function switchMode(modeKey) {
+  currentMode  = modeKey;
+  puzzleGrid   = MODES[modeKey].grid;
+  puzzleReward = MODES[modeKey].reward;
+  document.querySelectorAll('.mode-sel-btn').forEach(b => {
+    b.classList.toggle('active-mode', b.dataset.mode === modeKey);
+  });
+  shufflePuzzle(puzzleGrid);
+  puzzleCursor = { row: 0, col: 0 };
+  renderPuzzle();
+}
+
+function shufflePuzzle(size) {
+  const total = size * size;
+  let emptyIdx;
+  do {
+    puzzleTiles = Array.from({ length: total }, (_, i) => i);
+    emptyIdx = total - 1;
+    for (let i = 0; i < 300; i++) {
+      const neighbors = getMovable(emptyIdx, size);
+      const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
+      puzzleTiles[emptyIdx] = puzzleTiles[pick];
+      puzzleTiles[pick]     = total - 1;
+      emptyIdx = pick;
+    }
+  } while (puzzleTiles.every((v, i) => v === i));
+}
+
+function getMovable(emptyIdx, size) {
+  const row = Math.floor(emptyIdx / size);
+  const col = emptyIdx % size;
+  const n   = [];
+  if (row > 0)      n.push(emptyIdx - size);
+  if (row < size-1) n.push(emptyIdx + size);
+  if (col > 0)      n.push(emptyIdx - 1);
+  if (col < size-1) n.push(emptyIdx + 1);
+  return n;
+}
+
+function renderPuzzle() {
+  const tileSize = MODES[currentMode].tileSize;
+  const grid     = document.getElementById('puzzleGrid');
+  const emptyVal = puzzleGrid * puzzleGrid - 1;
+
+  grid.style.gridTemplateColumns = `repeat(${puzzleGrid}, ${tileSize}px)`;
+  grid.style.gridTemplateRows    = `repeat(${puzzleGrid}, ${tileSize}px)`;
+  grid.innerHTML = '';
+
+  puzzleTiles.forEach((tileNum, idx) => {
+    const isEmpty = tileNum === emptyVal;
+    const cell    = document.createElement('div');
+
+    cell.className = isEmpty ? 'puzzle-tile empty' : 'puzzle-tile';
+    cell.style.width  = tileSize + 'px';
+    cell.style.height = tileSize + 'px';
+
+    if (!isEmpty) {
+      cell.style.backgroundPosition = `${-(tileNum % puzzleGrid) * tileSize}px ${-Math.floor(tileNum / puzzleGrid) * tileSize}px`;
+      cell.style.backgroundSize     = `${puzzleGrid * tileSize}px ${puzzleGrid * tileSize}px`;
+      cell.addEventListener('pointerdown', () => tryMoveTile(idx));
+    }
+
+    grid.appendChild(cell);
+  });
+}
+  function isSolved() {
+    return puzzleTiles.every((v, i) => v === i);
+  }
+
+  let puzzleIdleInterval = null;
+  let puzzleLambFrame    = 0;
+
+  function startPuzzleLambIdle() {
+    if (puzzleIdleInterval) return;
+    puzzleIdleInterval = setInterval(() => {
+      puzzleLambFrame = (puzzleLambFrame + 1) % idleFrames.length;
+      const el = document.getElementById('puzzleLambSprite');
+      if (el) el.src = idleFrames[puzzleLambFrame];
+    }, 500);
+  }
+
+function stopPuzzleLambIdle() {
+  clearInterval(puzzleIdleInterval);
+  puzzleIdleInterval = null;
+  puzzleLambFrame    = 0;
+}
+
+function playPuzzleLoveAnim(cb) {
+  stopPuzzleLambIdle();
+  let frame = 0;
+  const el  = document.getElementById('puzzleLambSprite');
+  if (el) el.src = loveFrames[0];
+  const iv = setInterval(() => {
+    frame = frame === 0 ? 1 : 0;
+    if (el) el.src = loveFrames[frame];
+  }, 500);
+  setTimeout(() => { clearInterval(iv); if (cb) cb(); }, 2500);
+}
+
+function openPuzzle() {
+  if (isBusy) return;
+  isBusy = true;
+  stopIdleAnim();
+  stopMoveAnim();
+  keysHeld.clear();
+  gameButtons.forEach(btn => btn && (btn.disabled = true));
+  document.querySelectorAll('.dpad-btn[data-dir]').forEach(btn => btn.disabled = true);
+
+  switchMode('medium');
+  document.getElementById('puzzleOverlay').classList.add('active');
+  puzzleOpen = true;
+  startPuzzleLambIdle();
+}
+
+function closePuzzle(won) {
+  if (won) {
+    playPuzzleLoveAnim(() => {
+      stopPuzzleLambIdle();
+      document.getElementById('puzzleOverlay').classList.remove('active');
+      puzzleOpen = false;
+      stats.happy = Math.min(100, stats.happy + puzzleReward);
+      document.getElementById('happyFill').style.width = stats.happy + '%';
+      exitPuzzleState();
+    });
+  } else {
+    stopPuzzleLambIdle();
+    document.getElementById('puzzleOverlay').classList.remove('active');
+    puzzleOpen = false;
+    exitPuzzleState();
+  }
+}
+
+function exitPuzzleState() {
+  isBusy = false;
+  gameButtons.forEach(btn => btn && (btn.disabled = false));
+  document.querySelectorAll('.dpad-btn[data-dir]').forEach(btn => btn.disabled = false);
+  document.getElementById('puzzleExitBtn').disabled = false;
+  document.querySelectorAll('.mode-sel-btn').forEach(b => b.disabled = false);
+  startIdleAnim();
+}
+
+function tryMoveTile(idx) {
+  if (!puzzleOpen) return;
+  const emptyVal = puzzleGrid * puzzleGrid - 1;
+  const emptyIdx = puzzleTiles.indexOf(emptyVal);
+  const cr = Math.floor(idx     / puzzleGrid), cc = idx     % puzzleGrid;
+  const er = Math.floor(emptyIdx / puzzleGrid), ec = emptyIdx % puzzleGrid;
+  if ((Math.abs(cr - er) + Math.abs(cc - ec)) !== 1) return;
+  puzzleTiles[emptyIdx] = puzzleTiles[idx];
+  puzzleTiles[idx]      = emptyVal;
+  renderPuzzle();
+  if (isSolved()) showLastTileAndComplete();
+}
+
+function showLastTileAndComplete() {
+  document.getElementById('puzzleExitBtn').disabled = true;
+  document.querySelectorAll('.mode-sel-btn').forEach(b => b.disabled = true);
+  puzzleOpen = false;
+  const tileSize = MODES[currentMode].tileSize;
+  const emptyVal = puzzleGrid * puzzleGrid - 1;
+  const grid     = document.getElementById('puzzleGrid');
+  const cells    = grid.children;
+
+  const emptyIdx = puzzleTiles.indexOf(emptyVal);
+  const cell     = cells[emptyIdx];
+
+  const col = emptyVal % puzzleGrid;
+  const row = Math.floor(emptyVal / puzzleGrid);
+
+  cell.style.transition        = 'opacity 1.5s ease';
+  cell.style.opacity           = '0';
+  cell.style.backgroundImage   = `url('${PUZZLE_IMG}')`;
+  cell.style.backgroundSize    = `${puzzleGrid * tileSize}px ${puzzleGrid * tileSize}px`;
+  cell.style.backgroundPosition= `${-col * tileSize}px ${-row * tileSize}px`;
+  cell.style.backgroundRepeat  = 'no-repeat';
+  cell.style.backgroundColor   = 'transparent';
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cell.style.opacity = '1';
+    });
+  });
+
+  setTimeout(() => closePuzzle(true), 2000);
+}
+
+document.getElementById('playBtn').addEventListener('click', () => openPuzzle());
+document.getElementById('puzzleExitBtn').addEventListener('click', () => closePuzzle(false));
+document.querySelectorAll('.mode-sel-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchMode(btn.dataset.mode));
 });
