@@ -1,3 +1,36 @@
+const PRELOAD_ASSETS = [
+  'assets/lamb.png',
+  'assets/logo.png',
+  'assets/start_btn.png',
+  'assets/console.png',
+  'assets/dpad.png',
+  'assets/abxy.png',
+  'assets/bg_placeholder.png',
+  'assets/mainmenu_screen.png',
+  'assets/popup.png',
+  'assets/ok_btn.png',
+  'assets/back_btn.png',
+  'assets/easy_btn.png',
+  'assets/med_btn.png',
+  'assets/hard_btn.png',
+  'assets/food_stat.png',
+  'assets/happy_stat.png',
+  'assets/sleep_stat.png',
+  'assets/love_stat.png',
+  'assets/q_btn.png',
+  'assets/puzzle_img.png',
+  ...Array.from({length:4}, (_,i) => `assets/lamb_animation/idle/idle${i+1}.png`),
+  ...Array.from({length:4}, (_,i) => `assets/lamb_animation/move/move${i+1}.png`),
+  ...Array.from({length:2}, (_,i) => `assets/lamb_animation/sleep/sleep${i+1}.png`),
+  ...Array.from({length:7}, (_,i) => `assets/lamb_animation/feed/feed${i+1}.png`),
+  ...Array.from({length:3}, (_,i) => `assets/lamb_animation/love/love${i+1}.png`),
+];
+
+PRELOAD_ASSETS.forEach(src => {
+  const img = new Image();
+  img.src = src;
+});
+
 async function enterFullscreen() {
 
   const elem = document.documentElement;
@@ -61,8 +94,8 @@ document.getElementById("nameInput").addEventListener("input", () => {
 const SPEED = 100;
 
 let animFrame = null; 
-let lambX = 80;
-let lambY = 60;
+let lambX = 0;
+let lambY = 0;
 let keysHeld = new Set(); 
 
 const moveFrames = [
@@ -297,14 +330,12 @@ function stopLoop() {
 }
 
 const keyMap = {
-  ArrowLeft: "left", ArrowRight: "right",
-  ArrowUp: "up",     ArrowDown: "down",
   a: "left", d: "right", w: "up", s: "down"
 };
 
 document.addEventListener("keydown", e => {
   if (puzzleOpen) {
-    if (e.key === 'J' || e.key === 'j') {
+    if (e.key === 'ArrowLeft') {
       closePuzzle(false);
     }
     return;
@@ -312,25 +343,22 @@ document.addEventListener("keydown", e => {
   if (isBusy) return;
   if (document.activeElement.tagName === "INPUT") return;
 
-  if (e.key === "k" || e.key === "K") {
+  if (e.key === "ArrowLeft") {
+    document.getElementById("playBtn").click();
+    return;
+  }
+  if (e.key === "ArrowUp") {
+    document.getElementById("loveBtn").click();
+    return;
+  }
+  if (e.key === "ArrowRight") {
+    document.getElementById("feedBtn").click();
+    return;
+  }
+  if (e.key === "ArrowDown") {
     document.getElementById("sleepBtn").click();
     return;
   }
-
-   if (e.key === "l" || e.key === "L") {
-    document.getElementById("feedBtn").click();
-    return;
-   }
-
-  if (e.key === "i" || e.key === "I") {
-    document.getElementById("loveBtn").click();
-    return;
-   }
-
-  if (e.key === "j" || e.key === "J") {
-    document.getElementById("playBtn").click();
-    return;
-   }
 
   const dir = keyMap[e.key];
   if (!dir) return;
@@ -397,7 +425,14 @@ function onTimerEnd() {
 }
 
 function startGame() {
+   const screen = document.getElementById('screen');
+  lambX = (screen.offsetWidth  - 80) / 2;
+  lambY = (screen.offsetHeight - 80) / 2;
+  lamb.style.left = lambX + 'px';
+  lamb.style.top  = lambY + 'px';
+
   document.body.focus();
+  document.getElementById('lambSprite').src = idleFrames[0];
   startLoop();
   startIdleAnim();
   // startCountdown();
@@ -620,4 +655,40 @@ document.getElementById('playBtn').addEventListener('click', () => openPuzzle())
 document.getElementById('puzzleExitBtn').addEventListener('click', () => closePuzzle(false));
 document.querySelectorAll('.mode-sel-btn').forEach(btn => {
   btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+});
+
+// ============================================================
+// TUTORIAL
+// ============================================================
+const TOTAL_SLIDES = 5;
+let tutSlide = 1;
+
+function openTutorial() {
+  tutSlide = 1;
+  updateTutorial();
+  document.getElementById('tutorialOverlay').classList.add('active');
+}
+
+function closeTutorial() {
+  document.getElementById('tutorialOverlay').classList.remove('active');
+}
+
+function updateTutorial() {
+  document.getElementById('tutorialSlide').src = `assets/tutorial/tut${tutSlide}.png`;
+  document.getElementById('tutPrevBtn').disabled = tutSlide === 1;
+  document.getElementById('tutNextBtn').disabled = tutSlide === TOTAL_SLIDES;
+  document.querySelectorAll('.tut-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === tutSlide - 1);
+  });
+}
+
+document.getElementById('infoBtn').addEventListener('click', () => openTutorial());
+document.getElementById('tutorialOverlay').addEventListener('click', () => closeTutorial());
+document.getElementById('tutPrevBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (tutSlide > 1) { tutSlide--; updateTutorial(); }
+});
+document.getElementById('tutNextBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (tutSlide < TOTAL_SLIDES) { tutSlide++; updateTutorial(); }
 });

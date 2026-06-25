@@ -91,6 +91,7 @@
         <!-- WORLD -->
         <div id="world" style="display:none">
           <div id="tileLayer"></div>
+          <div id="objectLayer"></div>
           <div id="foodItem" style="display:none">🌿</div>
           <div id="dialogue"></div>
         </div>
@@ -116,6 +117,27 @@
           </div>
           <div id="puzzleLambCol">
             <img id="puzzleLambSprite" src="assets/lamb_animation/idle/idle1.png">
+          </div>
+        </div>
+              <!-- TUTORIAL OVERLAY -->
+        <div id="tutorialOverlay">
+          <div id="tutorialBox" onclick="event.stopPropagation()">
+            <button class="tut-nav-btn" id="tutPrevBtn">
+              <img src="assets/tutorial/left_btn.png" alt="prev">
+            </button>
+            <div style="position:relative">
+              <img id="tutorialSlide" src="assets/tutorial/tut1.png" alt="tutorial">
+              <div id="tutorialDots">
+                <div class="tut-dot active"></div>
+                <div class="tut-dot"></div>
+                <div class="tut-dot"></div>
+                <div class="tut-dot"></div>
+                <div class="tut-dot"></div>
+              </div>
+            </div>
+            <button class="tut-nav-btn" id="tutNextBtn">
+              <img src="assets/tutorial/right_btn.png" alt="next">
+            </button>
           </div>
         </div>
       </div><!-- /screen -->
